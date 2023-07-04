@@ -1,0 +1,3 @@
+[submodule "utils/sample-dirs"]
+	path = utils/sample-dirs
+	url = git@github.com:drewzemke/sample-dirs.git
