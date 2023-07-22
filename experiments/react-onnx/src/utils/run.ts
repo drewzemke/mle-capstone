@@ -1,34 +1,31 @@
 import { ModelManager } from "./ModelManager";
+import { TaskTimer } from "./TaskTimer";
 import { computeInputTensor, computeBoxes } from "./imageProcessing";
 
-export async function run(canvas: HTMLCanvasElement, modelManager: ModelManager) {
-  console.log("starting inference...");
-  const inferenceStartTime = new Date();
+export async function run(canvas: HTMLCanvasElement, modelManager: ModelManager, timer: TaskTimer) {
+  timer.startParent("inference");
 
   // 1. convert to tensor
-  console.log("1. computing image tensor...");
+  timer.start("compute image tensor");
   const imageTensor = await computeInputTensor(canvas, modelManager.modelSize);
-  console.log(
-    `   image tensor computed in ${new Date().getTime() - inferenceStartTime.getTime()} ms`
-  );
+  timer.finish("compute image tensor");
 
   // 2. create models
-  const infStartTime = new Date();
-  console.log("2. running model...");
-  const inferenceResults = await modelManager.execute(imageTensor);
-  console.log(`   model ran in ${new Date().getTime() - infStartTime.getTime()} ms`);
+
+  timer.startParent("execute model");
+  const inferenceResults = await modelManager.execute(imageTensor, timer);
+  timer.finish("execute model");
 
   // 3. process results
-  const processStartTime = new Date();
-  console.log("3. processing results...");
+  timer.start("process results");
   const results = computeBoxes(
     inferenceResults,
     { width: canvas.width, height: canvas.height },
     modelManager.modelSize
   );
-  console.log(`   processed results in ${new Date().getTime() - processStartTime.getTime()} ms`);
+  timer.finish("process results");
 
   // 4. return predictions
-  console.log(`inference complete in ${new Date().getTime() - inferenceStartTime.getTime()} ms`);
+  timer.finish("inference");
   return results;
 }

@@ -1,4 +1,5 @@
 import { InferenceSession, Tensor, TypedTensor } from "onnxruntime-web";
+import { TaskTimer } from "./TaskTimer";
 
 // nms settings:
 // preserve the top k instances of each class
@@ -13,39 +14,35 @@ const scoreThreshold = 0.25;
 export class ModelManager {
   private yolo: InferenceSession | undefined;
   private nms: InferenceSession | undefined;
+  private nmsConfig: Tensor;
   modelSize: number;
 
   constructor() {
     this.modelSize = 640;
+    this.nmsConfig = new Tensor("float32", new Float32Array([topk, iouThreshold, scoreThreshold]));
   }
 
-  async init() {
+  async init(timer: TaskTimer) {
     if (!this.yolo || !this.nms) {
-      console.log("loading models...");
-
-      const loadStartTime = new Date();
+      timer.start("load models");
       this.yolo = await InferenceSession.create("yolov8n.onnx");
       this.nms = await InferenceSession.create("nms-yolov8.onnx");
-      console.log(`models loaded in ${new Date().getTime() - loadStartTime.getTime()} ms`);
+      timer.finish("load models");
     }
   }
 
-  async execute(tensor: TypedTensor<"float32">) {
+  async execute(tensor: TypedTensor<"float32">, timer: TaskTimer) {
     if (!this.yolo || !this.nms) {
       throw new Error("Models were used before being initialized");
     }
 
-    const nmsConfig = new Tensor("float32", new Float32Array([topk, iouThreshold, scoreThreshold]));
-
-    console.log("   2a. running yolo...");
-    const yoloStartTime = new Date();
+    timer.start("yolo");
     const { output0 } = await this.yolo.run({ images: tensor });
-    console.log(`       yolo ran in ${new Date().getTime() - yoloStartTime.getTime()} ms`);
+    timer.finish("yolo");
 
-    console.log("   2b. running nms...");
-    const nmsStartTime = new Date();
-    const { selected } = await this.nms.run({ detection: output0, config: nmsConfig });
-    console.log(`       nms ran in ${new Date().getTime() - nmsStartTime.getTime()} ms`);
+    timer.start("nms");
+    const { selected } = await this.nms.run({ detection: output0, config: this.nmsConfig });
+    timer.finish("nms");
 
     return selected;
   }

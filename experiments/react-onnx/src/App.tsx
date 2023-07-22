@@ -6,6 +6,7 @@ import { Size } from "./utils/types";
 import { run } from "./utils/run";
 import { drawBoxes } from "./utils/graphics";
 import { ModelManager } from "./utils/ModelManager";
+import { TaskTimer } from "./utils/TaskTimer";
 
 const CANVAS_MAX_SIZE = 800;
 
@@ -27,10 +28,13 @@ function App() {
     setCvReady(true);
   };
 
+  const timer = useMemo(() => new TaskTimer(), []);
+
   const modelManager = useMemo(() => new ModelManager(), []);
   const [modelReady, setModelReady] = useState<boolean>(false);
   useEffect(() => {
-    modelManager.init().then(() => setModelReady(true));
+    setModelReady(false);
+    modelManager.init(timer).then(() => setModelReady(true));
   }, []);
 
   useEffect(() => {
@@ -45,7 +49,7 @@ function App() {
         return;
       }
 
-      run(canvas.current, modelManager).then((results) => drawBoxes(ctx, results));
+      run(canvas.current, modelManager, timer).then((results) => drawBoxes(ctx, results));
     }
   }, [canvas.current, cvReady, modelReady]);
 
