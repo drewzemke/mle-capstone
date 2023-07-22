@@ -50,7 +50,7 @@ type Box = { centerX: number; centerY: number; width: number; height: number };
 type LabeledBox = { box: Box; label: string; score: number };
 
 function processResults(output: ort.Tensor, canvasSize: Size) {
-  const whatDoTheseBoxesMean: LabeledBox[] = [];
+  const boxes: LabeledBox[] = [];
   const ratioX = MODEL_SIZE / canvasSize.width;
   const ratioY = MODEL_SIZE / canvasSize.height;
 
@@ -71,10 +71,10 @@ function processResults(output: ort.Tensor, canvasSize: Size) {
     const scaledBox = { centerX, centerY, width, height };
 
     const label = scores.indexOf(score);
-    whatDoTheseBoxesMean.push({ box: scaledBox, score, label: labels[label] });
+    boxes.push({ box: scaledBox, score, label: labels[label] });
   }
 
-  return whatDoTheseBoxesMean;
+  return boxes;
 }
 
 async function runInference(
@@ -94,22 +94,40 @@ async function runInference(
 async function predict(canvas: HTMLCanvasElement) {
   console.log("starting inference...");
   const startTime = new Date();
+
   // 1. convert to tensor
+  console.log("1. computing image tensor...");
   const imageTensor = await getImageTensor(canvas);
+  console.log(
+    `   image tensor computed in ${
+      new Date().getTime() - startTime.getTime()
+    } ms`
+  );
 
   // 2. create models
   const yolo = await ort.InferenceSession.create("yolov8n.onnx");
   const nms = await ort.InferenceSession.create("nms-yolov8.onnx");
+  const infStartTime = new Date();
+  console.log("2. running model...");
+  const inferenceResults = await runInference(yolo, nms, imageTensor);
+  console.log(
+    `   model ran in ${new Date().getTime() - infStartTime.getTime()} ms`
+  );
 
   // 3. process results
-  const inferenceResults = await runInference(yolo, nms, imageTensor);
+  const processStartTime = new Date();
+  console.log("3. processing results...");
   const canvasSize: Size = { width: canvas.width, height: canvas.height };
   const results = processResults(inferenceResults, canvasSize);
+  console.log(
+    `   processed results in ${
+      new Date().getTime() - processStartTime.getTime()
+    } ms`
+  );
 
   // 4. return predictions
-  const endTime = new Date();
   console.log(
-    `inference complete in ${endTime.getTime() - startTime.getTime()} ms`
+    `inference complete in ${new Date().getTime() - startTime.getTime()} ms`
   );
   return results;
 }
@@ -145,8 +163,6 @@ function App() {
       ctx.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
       predict(canvas.current).then((results) => {
         results.forEach(({ box, label }) => {
-          console.log(box);
-          console.log(label);
           const { centerX, centerY, width, height } = box;
           ctx.strokeStyle = "orange";
           ctx.lineWidth = 2;
@@ -155,6 +171,25 @@ function App() {
             centerY - height / 2,
             width,
             height
+          );
+
+          const textPadding = 3;
+          ctx.font = "bold 12px monospace";
+          ctx.fillStyle = "orange";
+          ctx.fillRect(
+            centerX - width / 2,
+            centerY + height / 2 - (12 + 2 * textPadding),
+            ctx.measureText(label).width + 2 * textPadding,
+            12 + 2 * textPadding
+          );
+
+          ctx.fillStyle = "white";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(
+            label,
+            centerX - width / 2 + textPadding,
+            centerY + height / 2 - textPadding
           );
         });
       });
