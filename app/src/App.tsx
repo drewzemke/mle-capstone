@@ -42,38 +42,49 @@ function App() {
     ctx?.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
   }, [inputCanvas.current]);
 
-  useEffect(() => {
-    if (outputCanvas.current && cvReady && modelReady) {
-      const ctx = outputCanvas.current.getContext("2d");
-      if (!ctx) {
-        return;
-      }
+  const handleRun = () => {
+    const ctx = outputCanvas.current.getContext("2d")!;
+    run(inputCanvas.current, modelManager, timer).then((results) => drawBoxes(ctx, results));
+  };
 
-      run(inputCanvas.current, modelManager, timer).then((results) => drawBoxes(ctx, results));
-    }
-  }, [inputCanvas.current, outputCanvas.current, cvReady, modelReady]);
+  const handleClear = () => {
+    const ctx = outputCanvas.current.getContext("2d");
+    ctx?.clearRect(0, 0, canvasSize.width, canvasSize.height);
+  };
+
+  const ready = modelReady && cvReady;
 
   return (
-    <main>
-      <h1>YOLOv8 in-browser demo</h1>
-      <div
-        className="canvas-container"
-        style={{ width: canvasSize.width, height: canvasSize.height }}
-      >
-        <canvas
-          ref={inputCanvas}
-          width={canvasSize.width}
-          height={canvasSize.height}
-          style={{ zIndex: 1 }}
-        />
-        <canvas
-          ref={outputCanvas}
-          width={canvasSize.width}
-          height={canvasSize.height}
-          style={{ zIndex: 2 }}
-        />
-      </div>
-    </main>
+    <div className="app-container">
+      <main>
+        <h1>YOLOv8 in-browser demo</h1>
+        <div
+          className="canvas-container"
+          style={{ width: canvasSize.width, height: canvasSize.height }}
+        >
+          <canvas
+            ref={inputCanvas}
+            width={canvasSize.width}
+            height={canvasSize.height}
+            style={{ zIndex: 1 }}
+          />
+          <canvas
+            ref={outputCanvas}
+            width={canvasSize.width}
+            height={canvasSize.height}
+            style={{ zIndex: 2 }}
+          />
+        </div>
+        <div className="buttons">
+          <button type="button" disabled={!ready} onClick={handleRun}>
+            Run Model
+          </button>
+          <button type="button" onClick={handleClear}>
+            Clear Output
+          </button>
+        </div>
+      </main>
+    </div>
   );
 }
 
