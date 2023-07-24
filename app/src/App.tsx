@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import cv from "@techstark/opencv-js";
 
-import "./App.css";
 import { Size } from "./utils/types";
 import { run } from "./utils/run";
 import { drawBoxes } from "./utils/graphics";
@@ -11,7 +10,8 @@ import { TaskTimer } from "./utils/TaskTimer";
 const CANVAS_MAX_SIZE = 800;
 
 function App() {
-  const canvas = useRef<HTMLCanvasElement>(null!);
+  const inputCanvas = useRef<HTMLCanvasElement>(null!);
+  const outputCanvas = useRef<HTMLCanvasElement>(null!);
 
   const image = new Image();
   image.src = "pupper4.jpg";
@@ -38,29 +38,42 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const ctx = canvas.current?.getContext("2d");
+    const ctx = inputCanvas.current?.getContext("2d");
     ctx?.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
-  }, [canvas.current]);
+  }, [inputCanvas.current]);
 
   useEffect(() => {
-    if (canvas.current && cvReady && modelReady) {
-      const ctx = canvas.current.getContext("2d");
+    if (outputCanvas.current && cvReady && modelReady) {
+      const ctx = outputCanvas.current.getContext("2d");
       if (!ctx) {
         return;
       }
 
-      run(canvas.current, modelManager, timer).then((results) => drawBoxes(ctx, results));
+      run(inputCanvas.current, modelManager, timer).then((results) => drawBoxes(ctx, results));
     }
-  }, [canvas.current, cvReady, modelReady]);
+  }, [inputCanvas.current, outputCanvas.current, cvReady, modelReady]);
 
   return (
-    <>
-      <h1>Can I run YOLOv8 in my browser?</h1>
-      <div>
-        <p>Let's find out. </p>
+    <main>
+      <h1>YOLOv8 in-browser demo</h1>
+      <div
+        className="canvas-container"
+        style={{ width: canvasSize.width, height: canvasSize.height }}
+      >
+        <canvas
+          ref={inputCanvas}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          style={{ zIndex: 1 }}
+        />
+        <canvas
+          ref={outputCanvas}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          style={{ zIndex: 2 }}
+        />
       </div>
-      <canvas ref={canvas} width={canvasSize.width} height={canvasSize.height} />
-    </>
+    </main>
   );
 }
 
