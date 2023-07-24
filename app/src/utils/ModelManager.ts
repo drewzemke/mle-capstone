@@ -3,13 +3,16 @@ import { TaskTimer } from "./TaskTimer";
 
 // nms settings:
 // preserve the top k instances of each class
-const topk = 100;
+const TOP_K = 100;
 
 // intersection over union threshold -- boxes with a smaller IOU will be discarded
-const iouThreshold = 0.45;
+const IOU_THRESHOLD = 0.45;
 
 // also discard boxes with small scores
-const scoreThreshold = 0.25;
+const SCORE_THRESHOLD = 0.25;
+
+// the size of the (square) image expected by the model
+const MODEL_SIZE = 256;
 
 export class ModelManager {
   private yolo: InferenceSession | undefined;
@@ -18,8 +21,11 @@ export class ModelManager {
   modelSize: number;
 
   constructor() {
-    this.modelSize = 640;
-    this.nmsConfig = new Tensor("float32", new Float32Array([topk, iouThreshold, scoreThreshold]));
+    this.modelSize = MODEL_SIZE;
+    this.nmsConfig = new Tensor(
+      "float32",
+      new Float32Array([TOP_K, IOU_THRESHOLD, SCORE_THRESHOLD])
+    );
   }
 
   async init(timer: TaskTimer) {
