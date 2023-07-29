@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import cv, { absdiff } from "@techstark/opencv-js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import cv from "@techstark/opencv-js";
 
 import { Size } from "./utils/types";
 import { run } from "./utils/run";
@@ -8,7 +8,6 @@ import { ModelManager } from "./utils/ModelManager";
 import { TaskTimer } from "./utils/TaskTimer";
 import Webcam from "react-webcam";
 
-const CANVAS_WIDTH = 800;
 // just putting this here for easier control
 const USE_TIMER = true;
 
@@ -18,6 +17,10 @@ function App() {
   const webcam = useRef<Webcam>(null!);
 
   const timer = USE_TIMER ? useMemo(() => new TaskTimer(), []) : undefined;
+
+  const animRequestRef = useRef<number>();
+  const animStartTime = useRef<number>(0);
+  const renderCount = useRef<number>(0);
 
   // setup cv
   const [cvReady, setCvReady] = useState<boolean>(false);
@@ -47,7 +50,13 @@ function App() {
     outputCtx?.clearRect(0, 0, canvasSize.width, canvasSize.height);
   };
 
-  const handleRun = () => {
+  const [running, setRunning] = useState(false);
+
+  const runModel = useCallback(() => {
+    // calculate fps
+    renderCount.current++;
+    const fps = (1000 * renderCount.current) / (Date.now() - animStartTime.current);
+
     // take a screenshot of the webcam and render it to the input canvas
     // HACK: probably don't need to convert to an image type, just ship the base64 string to the model
     const inputCtx = inputCanvas.current?.getContext("2d");
@@ -61,16 +70,45 @@ function App() {
       run(inputCanvas.current, modelManager, timer).then((results) => {
         handleClear();
         drawBoxes(outputCtx, results);
+        outputCtx.fillText(`${fps.toFixed(1)} FPS`, 8, 18);
       });
     };
-  };
+
+    if (running) {
+      animRequestRef.current = requestAnimationFrame(runModel);
+    }
+  }, [running]);
 
   const ready = modelReady && cvReady;
+
+  useEffect(() => {
+    if (!running) {
+      if (animRequestRef.current) {
+        cancelAnimationFrame(animRequestRef.current);
+      }
+      return () => {};
+    } else {
+      animRequestRef.current = requestAnimationFrame(runModel);
+      return () => animRequestRef.current && cancelAnimationFrame(animRequestRef.current);
+    }
+  }, [running]);
+
+  const toggleRunning = () => {
+    if (running) {
+      console.log("Stopping model.");
+      setRunning(false);
+    } else {
+      console.log("Starting model.");
+      animStartTime.current = Date.now();
+      renderCount.current = 0;
+      setRunning(true);
+    }
+  };
 
   return (
     <div className="app-container">
       <main>
-        <h1>YOLOv8 + Webcam 🙌</h1>
+        <h1>{`YOLOv8 + Webcam ${running ? "🙌" : ""}`}</h1>
         <div className="canvas-container" style={{ width: canvasSize.width }}>
           <Webcam
             ref={webcam}
@@ -92,8 +130,8 @@ function App() {
           />
         </div>
         <div className="buttons">
-          <button type="button" disabled={!ready} onClick={handleRun}>
-            Run Model
+          <button type="button" disabled={!ready} onClick={toggleRunning}>
+            Start/Stop Model
           </button>
           <button type="button" onClick={handleClear}>
             Clear Output
