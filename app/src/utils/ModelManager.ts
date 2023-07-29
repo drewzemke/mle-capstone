@@ -28,27 +28,27 @@ export class ModelManager {
     );
   }
 
-  async init(timer: TaskTimer) {
+  async init(timer?: TaskTimer) {
     if (!this.yolo || !this.nms) {
-      timer.start("load models");
+      timer?.start("load models");
       this.yolo = await InferenceSession.create("yolov8n.onnx");
       this.nms = await InferenceSession.create("nms-yolov8.onnx");
-      timer.finish("load models");
+      timer?.finish("load models");
     }
   }
 
-  async execute(tensor: TypedTensor<"float32">, timer: TaskTimer) {
+  async execute(tensor: TypedTensor<"float32">, timer?: TaskTimer) {
     if (!this.yolo || !this.nms) {
       throw new Error("Models were used before being initialized");
     }
 
-    timer.start("yolo");
+    timer?.start("yolo");
     const { output0 } = await this.yolo.run({ images: tensor });
-    timer.finish("yolo");
+    timer?.finish("yolo");
 
-    timer.start("nms");
+    timer?.start("nms");
     const { selected } = await this.nms.run({ detection: output0, config: this.nmsConfig });
-    timer.finish("nms");
+    timer?.finish("nms");
 
     return selected;
   }

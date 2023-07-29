@@ -9,13 +9,15 @@ import { TaskTimer } from "./utils/TaskTimer";
 import Webcam from "react-webcam";
 
 const CANVAS_WIDTH = 800;
+// just putting this here for easier control
+const USE_TIMER = true;
 
 function App() {
   const inputCanvas = useRef<HTMLCanvasElement>(null!);
   const outputCanvas = useRef<HTMLCanvasElement>(null!);
   const webcam = useRef<Webcam>(null!);
 
-  const timer = useMemo(() => new TaskTimer(), []);
+  const timer = USE_TIMER ? useMemo(() => new TaskTimer(), []) : undefined;
 
   // setup cv
   const [cvReady, setCvReady] = useState<boolean>(false);
