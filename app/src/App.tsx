@@ -3,7 +3,7 @@ import cv from "@techstark/opencv-js";
 
 import { Size } from "./utils/types";
 import { run } from "./utils/run";
-import { drawBoxes } from "./utils/graphics";
+import { drawFps, drawLetterProbs } from "./utils/graphics";
 import { ModelManager } from "./utils/ModelManager";
 import { TaskTimer } from "./utils/TaskTimer";
 import Webcam from "react-webcam";
@@ -69,8 +69,8 @@ function App() {
       const outputCtx = outputCanvas.current.getContext("2d")!;
       run(inputCanvas.current, modelManager, timer).then((results) => {
         handleClear();
-        drawBoxes(outputCtx, results);
-        outputCtx.fillText(`${fps.toFixed(1)} FPS`, 8, 18);
+        drawLetterProbs(outputCtx, results);
+        drawFps(outputCtx, fps);
       });
     };
 
@@ -108,7 +108,7 @@ function App() {
   return (
     <div className="app-container">
       <main>
-        <h1>{`YOLOv8 + Webcam ${running ? "🙌" : ""}`}</h1>
+        <h1>{`ASL Fingerspelling! ${running ? "🙌" : ""}`}</h1>
         <div className="canvas-container" style={{ width: canvasSize.width }}>
           <Webcam
             ref={webcam}

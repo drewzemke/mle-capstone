@@ -1,6 +1,6 @@
 import { Tensor } from "onnxruntime-web";
 import cv from "@techstark/opencv-js";
-import { LabeledBox, Size } from "./types";
+import { ClassificationResults, ClassificationScore, LabeledBox, Size } from "./types";
 import { labels } from "../labels";
 
 const NUM_CLASSES = labels.length;
@@ -70,4 +70,30 @@ export function computeBoxes(output: Tensor, canvasSize: Size, modelSize: number
   }
 
   return boxes;
+}
+
+const letterLabels = ["A", "B", "C", "D"];
+
+export function computeProbabilities(output: Tensor): ClassificationResults {
+  // output.data is a Float32Array with as many elements as there are labels
+  const scores = output.data as Float32Array;
+
+  let bestScoreIndex = 0;
+  const labeledScores: ClassificationScore[] = [];
+
+  for (let index = 0; index < scores.length; index++) {
+    const score = scores[index];
+    labeledScores.push({ label: letterLabels[index], score });
+    if (score > scores[bestScoreIndex]) {
+      bestScoreIndex = index;
+    }
+  }
+
+  labeledScores.sort((a, b) => b.score - a.score);
+
+  const best = { label: letterLabels[bestScoreIndex], score: scores[bestScoreIndex] };
+  return {
+    best,
+    scores: labeledScores,
+  };
 }

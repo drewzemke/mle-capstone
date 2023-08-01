@@ -1,6 +1,6 @@
 import { ModelManager } from "./ModelManager";
 import { TaskTimer } from "./TaskTimer";
-import { computeInputTensor, computeBoxes } from "./imageProcessing";
+import { computeInputTensor, computeProbabilities } from "./imageProcessing";
 
 export async function run(
   canvas: HTMLCanvasElement,
@@ -15,18 +15,13 @@ export async function run(
   timer?.finish("compute image tensor");
 
   // 2. create models
-
   timer?.startParent("execute model");
   const inferenceResults = await modelManager.execute(imageTensor, timer);
   timer?.finish("execute model");
 
   // 3. process results
   timer?.start("process results");
-  const results = computeBoxes(
-    inferenceResults,
-    { width: canvas.width, height: canvas.height },
-    modelManager.modelSize
-  );
+  const results = computeProbabilities(inferenceResults);
   timer?.finish("process results");
 
   // 4. return predictions

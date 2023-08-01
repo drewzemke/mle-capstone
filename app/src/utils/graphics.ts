@@ -1,4 +1,4 @@
-import { LabeledBox } from "./types";
+import { ClassificationResults, LabeledBox } from "./types";
 
 export function drawBoxes(ctx: CanvasRenderingContext2D, boxes: LabeledBox[]) {
   ctx.font = "bold 12px monospace";
@@ -25,4 +25,41 @@ export function drawBoxes(ctx: CanvasRenderingContext2D, boxes: LabeledBox[]) {
     ctx.fillStyle = "white";
     ctx.fillText(label, bottomLeftX + textPadding, bottomLeftY - textPadding);
   });
+}
+
+export function drawFps(ctx: CanvasRenderingContext2D, fps: number) {
+  ctx.font = "bold 12px monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "white";
+
+  ctx.fillText(`${fps.toFixed(1)} FPS`, ctx.canvas.width - 70, 18);
+}
+
+// how many of the top scores to show
+const TOP_N_SCORES = 5;
+
+// score threshold for predicting a label
+const SCORE_THRESHOLD = 0.6;
+
+export function drawLetterProbs(ctx: CanvasRenderingContext2D, results: ClassificationResults) {
+  ctx.font = "bold 12px monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "white";
+
+  const scores = results.scores.slice(0, TOP_N_SCORES);
+
+  for (let i = 0; i < scores.length; i++) {
+    ctx.fillText(`${scores[i].label}: ${scores[i].score.toFixed(2)}`, 8, 18 + 20 * i);
+
+    // TODO: measure where these bars should go more carefully
+
+    ctx.fillRect(70, 6 + 20 * i, 100 * scores[i].score, 10);
+  }
+
+  if (results.best.score > SCORE_THRESHOLD) {
+    ctx.font = "bold 92px monospace";
+    ctx.fillText(`${results.best.label}`, ctx.canvas.width / 2 - 20, 125);
+  }
 }

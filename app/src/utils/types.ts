@@ -11,3 +11,13 @@ export type Box = {
 };
 
 export type LabeledBox = { box: Box; label: string; score: number };
+
+export type ClassificationScore = {
+  label: string;
+  score: number;
+};
+
+export type ClassificationResults = {
+  best: ClassificationScore;
+  scores: ClassificationScore[];
+};
