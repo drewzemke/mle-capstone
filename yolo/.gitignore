@@ -1,0 +1,4 @@
+datasets/asl_alphabet_train
+datasets/asl_alphabet_test
+datasets/asl_alphabet.zip
+.venv
