@@ -72,7 +72,37 @@ export function computeBoxes(output: Tensor, canvasSize: Size, modelSize: number
   return boxes;
 }
 
-const letterLabels = ["A", "B", "C", "D"];
+const letterLabels = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "del",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "nothing",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "space",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+];
 
 export function computeProbabilities(output: Tensor): ClassificationResults {
   // output.data is a Float32Array with as many elements as there are labels

@@ -2,7 +2,7 @@ import { InferenceSession, TypedTensor } from "onnxruntime-web";
 import { TaskTimer } from "./TaskTimer";
 
 // the size of the (square) image expected by the model
-const MODEL_SIZE = 192;
+const MODEL_SIZE = 320;
 
 export class ModelManager {
   private yolo: InferenceSession | undefined;
