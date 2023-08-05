@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import cv from "@techstark/opencv-js";
 
 import { Size } from "./utils/types";
@@ -52,7 +52,7 @@ function App() {
 
   const [running, setRunning] = useState(false);
 
-  const runModel = useCallback(() => {
+  const runModel = () => {
     // calculate fps
     renderCount.current++;
     const fps = (1000 * renderCount.current) / (Date.now() - animStartTime.current);
@@ -77,7 +77,7 @@ function App() {
     if (running) {
       animRequestRef.current = requestAnimationFrame(runModel);
     }
-  }, [running]);
+  };
 
   const ready = modelReady && cvReady;
 
