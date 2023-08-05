@@ -36,7 +36,7 @@ function App() {
     modelManager.init(timer).then(() => setModelReady(true));
   }, []);
 
-  // HACK: need to figure out aspect ratio dynamically somehow
+  // FIXME: need to figure out aspect ratio dynamically somehow
   const canvasSize: Size = {
     width: 640,
     height: 480,
@@ -108,8 +108,16 @@ function App() {
   return (
     <div className="app-container">
       <main>
-        <h1>{`ASL Fingerspelling! ${running ? "🙌" : ""}`}</h1>
-        <div className="canvas-container" style={{ width: canvasSize.width }}>
+        <h1>ASL Fingerspelling</h1>
+        <div
+          className="canvas-container"
+          style={{
+            width: canvasSize.width,
+            height: canvasSize.height,
+            border: running ? "1px solid #535bf2" : "1px solid gray",
+            transition: "200ms",
+          }}
+        >
           <Webcam
             ref={webcam}
             width={canvasSize.width}
@@ -131,7 +139,7 @@ function App() {
         </div>
         <div className="buttons">
           <button type="button" disabled={!ready} onClick={toggleRunning}>
-            Start/Stop Model
+            {`${running ? "Stop" : "Start"} Model`}
           </button>
           <button type="button" onClick={handleClear}>
             Clear Output
