@@ -24,14 +24,14 @@ export async function computeInputTensor(canvas: HTMLCanvasElement, modelSize: n
     false
   );
 
-  // gotta manually release these for some reason
-  // maybe it'd be slightly faster to hold to them and reuse them?
-  imgMat.delete();
-  mat.delete();
-
   // convert to tensor. shape is based on 1 image, 3 channels, width and height
   const modelInputShape = [1, 3, modelSize, modelSize];
   const tensor = new Tensor("float32", input.data32F, modelInputShape);
+
+  // gotta manually release these for some reason
+  imgMat.delete();
+  mat.delete();
+  input.delete();
 
   return tensor;
 }
