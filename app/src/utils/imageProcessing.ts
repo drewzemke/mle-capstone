@@ -72,38 +72,6 @@ export function computeBoxes(output: Tensor, canvasSize: Size, modelSize: number
   return boxes;
 }
 
-const letterLabels = [
-  "A",
-  "B",
-  "C",
-  "D",
-  "del",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "nothing",
-  "O",
-  "P",
-  "Q",
-  "R",
-  "S",
-  "space",
-  "T",
-  "U",
-  "V",
-  "W",
-  "X",
-  "Y",
-  "Z",
-];
-
 export function computeProbabilities(output: Tensor): ClassificationResults {
   // output.data is a Float32Array with as many elements as there are labels
   const scores = output.data as Float32Array;
@@ -113,7 +81,7 @@ export function computeProbabilities(output: Tensor): ClassificationResults {
 
   for (let index = 0; index < scores.length; index++) {
     const score = scores[index];
-    labeledScores.push({ label: letterLabels[index], score });
+    labeledScores.push({ label: labels[index], score });
     if (score > scores[bestScoreIndex]) {
       bestScoreIndex = index;
     }
@@ -121,7 +89,7 @@ export function computeProbabilities(output: Tensor): ClassificationResults {
 
   labeledScores.sort((a, b) => b.score - a.score);
 
-  const best = { label: letterLabels[bestScoreIndex], score: scores[bestScoreIndex] };
+  const best = { label: labels[bestScoreIndex], score: scores[bestScoreIndex] };
   return {
     best,
     scores: labeledScores,
