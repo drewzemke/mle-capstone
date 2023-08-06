@@ -1,5 +1,0 @@
-train: /small_training/train
-val: /small_training/test
-
-nc: 4
-names: ['A', 'B', 'C', 'D']
