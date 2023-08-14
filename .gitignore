@@ -1,1 +1,5 @@
 .DS_Store
+yolo/datasets/fingerspelling_data_2
+yolo/datasets/fingerspelling_bg
+yolo/datasets/fingerspelling_clean
+yolo/datasets/fingerspelling_main

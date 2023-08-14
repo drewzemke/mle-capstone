@@ -8,7 +8,7 @@ export const labels = [
   "G",
   "H",
   "I",
-  "J",
+  // "J",
   "K",
   "L",
   "M",
@@ -24,5 +24,5 @@ export const labels = [
   "W",
   "X",
   "Y",
-  "Z",
+  // "Z",
 ];

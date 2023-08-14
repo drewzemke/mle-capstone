@@ -16,7 +16,7 @@ export class ModelManager {
   async init(timer?: TaskTimer) {
     if (!this.yolo) {
       timer?.start("load models");
-      this.yolo = await InferenceSession.create("fingerspelling.onnx");
+      this.yolo = await InferenceSession.create("best.onnx");
       timer?.finish("load models");
     }
   }
