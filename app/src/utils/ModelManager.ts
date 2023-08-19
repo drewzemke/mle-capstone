@@ -1,8 +1,11 @@
-import { InferenceSession, TypedTensor } from "onnxruntime-web";
+import { InferenceSession, TypedTensor, env as ortEnv } from "onnxruntime-web";
 import { TaskTimer } from "./TaskTimer";
 
 // the size of the (square) image expected by the model
 const MODEL_SIZE = 320;
+
+// configure ort to use the right asset path
+ortEnv.wasm.wasmPaths = `${import.meta.env.BASE_URL}/`;
 
 export class ModelManager {
   private yolo: InferenceSession | undefined;
@@ -16,7 +19,7 @@ export class ModelManager {
   async init(timer?: TaskTimer) {
     if (!this.yolo) {
       timer?.start("load models");
-      this.yolo = await InferenceSession.create("best.onnx");
+      this.yolo = await InferenceSession.create(`${import.meta.env.BASE_URL}/best.onnx`);
       timer?.finish("load models");
     }
   }
