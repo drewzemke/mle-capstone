@@ -11,10 +11,15 @@ import Webcam from "react-webcam";
 // just putting this here for easier control
 const USE_TIMER = true;
 
+// the widest the canvas will get on wide screens
+const MAX_CANVAS_WIDTH_PX = 640;
+
 function App() {
   const inputCanvas = useRef<HTMLCanvasElement>(null!);
   const outputCanvas = useRef<HTMLCanvasElement>(null!);
   const webcam = useRef<Webcam>(null!);
+
+  const [webcamSize, setWebcamSize] = useState<Size>();
 
   const timer = useMemo(() => (USE_TIMER ? new TaskTimer() : undefined), []);
 
@@ -41,10 +46,31 @@ function App() {
       });
   }, [modelManager, timer]);
 
-  // FIXME: need to figure out aspect ratio dynamically somehow
   const canvasSize: Size = useMemo(() => {
-    return { width: 640, height: 480 };
-  }, []);
+    if (!webcamSize) {
+      return { width: 0, height: 0 };
+    }
+
+    const maxWidth = Math.min(0.9 * window.innerWidth, MAX_CANVAS_WIDTH_PX);
+    const maxHeight = 0.7 * window.innerHeight;
+    const widthScalingFactor = maxWidth / webcamSize.width;
+    const heightScalingFactor = maxHeight / webcamSize.height;
+
+    // use whichever scaling factor is smaller
+    let width: number;
+    let height: number;
+    if (widthScalingFactor < heightScalingFactor) {
+      width = maxWidth;
+      height = webcamSize.height * widthScalingFactor;
+    } else {
+      height = maxHeight;
+      width = webcamSize.width * heightScalingFactor;
+    }
+
+    return { width, height };
+  }, [webcamSize]);
+
+  console.log("CANVAS SIZE:", canvasSize);
 
   const handleClear = useCallback(() => {
     const inputCtx = inputCanvas.current.getContext("2d");
@@ -62,7 +88,7 @@ function App() {
     const fps = (1000 * renderCount.current) / (Date.now() - animStartTime.current);
 
     // take a screenshot of the webcam and render it to the input canvas
-    // HACK: probably don't need to convert to an image type, just ship the base64 string to the model
+    // TODO: try just using webcam.current.getCanvas() instead?
     const inputCtx = inputCanvas.current?.getContext("2d");
     const screenshot = webcam.current.getScreenshot();
     const image = new Image();
@@ -85,7 +111,7 @@ function App() {
     }
   }, [handleClear, modelManager, running, timer]);
 
-  const ready = modelReady && cvReady;
+  const ready = modelReady && cvReady && webcamSize;
 
   useEffect(() => {
     if (!running) {
@@ -123,13 +149,23 @@ function App() {
             height: canvasSize.height,
             border: running ? "1px solid #535bf2" : "1px solid gray",
             transition: "200ms",
+            visibility: webcamSize ? "visible" : "hidden",
           }}
         >
           <Webcam
             ref={webcam}
-            width={canvasSize.width}
             screenshotFormat="image/png"
-            style={{ zIndex: 0 }}
+            width={canvasSize.width}
+            height={canvasSize.height}
+            onUserMedia={(stream) => {
+              const settings = stream
+                .getVideoTracks()
+                .find((track) => track.kind === "video")
+                ?.getSettings();
+              if (settings?.width && settings.height) {
+                setWebcamSize({ width: settings.width, height: settings.height });
+              }
+            }}
           />
           <canvas
             ref={inputCanvas}
@@ -144,6 +180,7 @@ function App() {
             style={{ zIndex: 2 }}
           />
         </div>
+        {!ready && <p>Loading webcam stream and ML models...</p>}
         <div className="buttons">
           <button type="button" disabled={!ready} onClick={toggleRunning}>
             {`${running ? "Stop" : "Start"} Model`}
