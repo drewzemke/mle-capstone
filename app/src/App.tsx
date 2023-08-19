@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import cv from "@techstark/opencv-js";
 
 import { Size } from "./utils/types";
@@ -16,7 +16,7 @@ function App() {
   const outputCanvas = useRef<HTMLCanvasElement>(null!);
   const webcam = useRef<Webcam>(null!);
 
-  const timer = USE_TIMER ? useMemo(() => new TaskTimer(), []) : undefined;
+  const timer = useMemo(() => (USE_TIMER ? new TaskTimer() : undefined), []);
 
   const animRequestRef = useRef<number>();
   const animStartTime = useRef<number>(0);
@@ -33,26 +33,30 @@ function App() {
   const [modelReady, setModelReady] = useState<boolean>(false);
   useEffect(() => {
     setModelReady(false);
-    modelManager.init(timer).then(() => setModelReady(true));
-  }, []);
+    modelManager
+      .init(timer)
+      .then(() => setModelReady(true))
+      .catch(() => {
+        console.error("Could not initialize model.");
+      });
+  }, [modelManager, timer]);
 
   // FIXME: need to figure out aspect ratio dynamically somehow
-  const canvasSize: Size = {
-    width: 640,
-    height: 480,
-  };
+  const canvasSize: Size = useMemo(() => {
+    return { width: 640, height: 480 };
+  }, []);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     const inputCtx = inputCanvas.current.getContext("2d");
     inputCtx?.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
     const outputCtx = outputCanvas.current.getContext("2d");
     outputCtx?.clearRect(0, 0, canvasSize.width, canvasSize.height);
-  };
+  }, [canvasSize]);
 
   const [running, setRunning] = useState(false);
 
-  const runModel = () => {
+  const runModel = useCallback(() => {
     // calculate fps
     renderCount.current++;
     const fps = (1000 * renderCount.current) / (Date.now() - animStartTime.current);
@@ -67,17 +71,19 @@ function App() {
       inputCtx?.drawImage(image, 0, 0);
 
       const outputCtx = outputCanvas.current.getContext("2d")!;
-      run(inputCanvas.current, modelManager, timer).then((results) => {
-        handleClear();
-        drawLetterProbs(outputCtx, results);
-        drawFps(outputCtx, fps);
-      });
+      run(inputCanvas.current, modelManager, timer)
+        .then((results) => {
+          handleClear();
+          drawLetterProbs(outputCtx, results);
+          drawFps(outputCtx, fps);
+        })
+        .catch(() => console.error("Encountered an error while running the model."));
     };
 
     if (running) {
       animRequestRef.current = requestAnimationFrame(runModel);
     }
-  };
+  }, [handleClear, modelManager, running, timer]);
 
   const ready = modelReady && cvReady;
 
@@ -86,12 +92,13 @@ function App() {
       if (animRequestRef.current) {
         cancelAnimationFrame(animRequestRef.current);
       }
-      return () => {};
     } else {
       animRequestRef.current = requestAnimationFrame(runModel);
-      return () => animRequestRef.current && cancelAnimationFrame(animRequestRef.current);
+      return () => {
+        animRequestRef.current && cancelAnimationFrame(animRequestRef.current);
+      };
     }
-  }, [running]);
+  }, [runModel, running]);
 
   const toggleRunning = () => {
     if (running) {
