@@ -70,7 +70,6 @@ function App() {
     return { width, height };
   }, [webcamSize]);
 
-  console.log("CANVAS SIZE:", canvasSize);
 
   const handleClear = useCallback(() => {
     const inputCtx = inputCanvas.current.getContext("2d");
@@ -181,6 +180,13 @@ function App() {
           />
         </div>
         {!ready && <p>Loading webcam stream and ML models...</p>}
+        {ready && (
+          <div>
+            <p>{`Window: ${window.innerWidth} x ${window.innerHeight}`}</p>
+            <p>{`Webcam: ${webcamSize.width} x ${webcamSize.height}`}</p>
+            <p>{`Canvas: ${canvasSize.width} x ${canvasSize.height}`}</p>
+          </div>
+        )}
         <div className="buttons">
           <button type="button" disabled={!ready} onClick={toggleRunning}>
             {`${running ? "Stop" : "Start"} Model`}
@@ -188,7 +194,7 @@ function App() {
           <button type="button" onClick={handleClear}>
             Clear Output
           </button>
-        </div>{" "}
+        </div>
       </main>
     </div>
   );
