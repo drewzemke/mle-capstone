@@ -71,7 +71,6 @@ function App() {
     return { width, height };
   }, [webcamSize]);
 
-
   const handleClear = useCallback(() => {
     const inputCtx = inputCanvas.current.getContext("2d");
     inputCtx?.clearRect(0, 0, canvasSize.width, canvasSize.height);
@@ -141,7 +140,10 @@ function App() {
   return (
     <div className="app-container">
       <main>
-        <h1>ASL Fingerspelling</h1>
+        <div className="header">
+          <h1>ASL Fingerspelling Classification</h1>
+          <h2>Using YOLOv8</h2>
+        </div>
         <div
           className="canvas-container"
           style={{
@@ -195,6 +197,10 @@ function App() {
             Clear Output
           </button>
         </div>
+        <p>
+          Visit <a href="https://github.com/drewzemke/mle-capstone">the Github repo</a> for more
+          information!
+        </p>
       </main>
     </div>
   );
