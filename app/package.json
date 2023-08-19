@@ -13,6 +13,7 @@
     "@techstark/opencv-js": "^4.7.0-release.1",
     "onnxruntime-web": "^1.15.1",
     "react": "^18.2.0",
+    "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
     "react-webcam": "^7.1.1",
     "vite-plugin-static-copy": "^0.16.0",

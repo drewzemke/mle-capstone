@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import cv from "@techstark/opencv-js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isMobile } from "react-device-detect";
+import Webcam from "react-webcam";
 
 import { Size } from "./utils/types";
 import { run } from "./utils/run";
 import { drawFps, drawLetterProbs } from "./utils/graphics";
 import { ModelManager } from "./utils/ModelManager";
 import { TaskTimer } from "./utils/TaskTimer";
-import Webcam from "react-webcam";
 
 // just putting this here for easier control
 const USE_TIMER = true;
@@ -156,13 +157,19 @@ function App() {
             screenshotFormat="image/png"
             width={canvasSize.width}
             height={canvasSize.height}
+            videoConstraints={{ facingMode: "user" }}
             onUserMedia={(stream) => {
               const settings = stream
                 .getVideoTracks()
                 .find((track) => track.kind === "video")
                 ?.getSettings();
               if (settings?.width && settings.height) {
-                setWebcamSize({ width: settings.width, height: settings.height });
+                // review the aspect ratio if a mobile device is detected
+                setWebcamSize(
+                  isMobile
+                    ? { width: settings.height, height: settings.width }
+                    : { width: settings.width, height: settings.height }
+                );
               }
             }}
           />
@@ -180,13 +187,6 @@ function App() {
           />
         </div>
         {!ready && <p>Loading webcam stream and ML models...</p>}
-        {ready && (
-          <div>
-            <p>{`Window: ${window.innerWidth} x ${window.innerHeight}`}</p>
-            <p>{`Webcam: ${webcamSize.width} x ${webcamSize.height}`}</p>
-            <p>{`Canvas: ${canvasSize.width} x ${canvasSize.height}`}</p>
-          </div>
-        )}
         <div className="buttons">
           <button type="button" disabled={!ready} onClick={toggleRunning}>
             {`${running ? "Stop" : "Start"} Model`}
