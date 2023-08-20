@@ -2,9 +2,9 @@
 
 I created a web app that tries to identify [ASL fingerspelling](https://en.wikipedia.org/wiki/Fingerspelling) that you sign into your webcam. 
 
-![sample screenshot of app -- letter M](docs/example-m.png)
-![sample screenshot of app -- letter L](docs/example-l.png)
-![sample screenshot of app -- letter E](docs/example-e.png)
+<p align="center">
+  <img src="docs/example-m.png" width="250" /><img src="docs/example-l.png" width="250" /><img src="docs/example-e.png" width="250" />
+</p>
 
 Try it out for yourself [here](https://drewzemke.github.io/mle-capstone/)!
 
@@ -20,7 +20,7 @@ In particular, it was trained from the `yolov8n-cls` ("nano") model.
 - The webapp itself is written in React. It uses [`opencv-js`](https://www.npmjs.com/package/@techstark/opencv-js) for image processing 
 and [`onnxruntime-web`](https://www.npmjs.com/package/onnxruntime-web) to perform inference using the trained model.
 
-## Training Data
+## Datasets
 
 I compiled a training set from two sources:
 
@@ -35,13 +35,45 @@ is witheld for validation, I used the remaining subset from the second dataset f
 to the training data, so the validation performance gave a better sense of how the model would perform on webcam data that was substantially different from the
 training data.
 
+A sample of the training data is available in the folder [`yolo/datasets/sample`](yolo/datasets/sample) in this repo. 
+You can download the full datasets from the links above.
+
+## Training
+
+I carried out all of the training from the command line, so I don't have much code to share for that stage. (The fact that the `ultralytics` library comes
+with a `yolo` command line tool meant I didn't have to interact with Python all that much, for which I am thankful.)
+But here's the command I ran to train the model, if you're curious:
+
+```shell
+yolo classify train model=yolov8s-cls.pt data=fingerspelling_main epochs=100
+```
+
+The model training algorithm ran for a few hours on my home computer. After training, I exported the resulting PyTorch model to the ONNX format
+so that I could load it in the app:
+
+```shell
+yolo export model=./runs/classify/train/weights/best.pt format=onnx imgsz=320
+```
+
 
 ## Performance
 
-- [ ] Todo... :)
+The trained model scores an accuracy of 0.926 on the test set. The full set of output artifacts from `yolo` (besides the trained model weights) 
+are available in [`yolo/runs/classify/train`](yolo/runs/classify/train).
+
+The confusion matrix is particularly interesting: 
+
+<p align="center">
+  <img src="yolo/runs/classify/train/confusion_matrix.png"/>
+</p>
+
+The large off-diagonal entries of the matrix correspond to similar-looking pairs of signs, so the model 
+makes some mistakes that could be considered understandable. 
+For example, the matrix indicates that the model struggles to distinguish 'A' from 'T' and 'K' from 'V' -- 
+these pairs of signs are visually similar and might reasonably be misidentified by a human as well.
 
 
-## Possible Improvement
+## Potential Improvements
 
 I don't know if I'll ever get around to working on these things, but here's what I would do next for this project in order to improve it.
 
