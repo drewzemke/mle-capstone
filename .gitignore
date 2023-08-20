@@ -1,5 +1,5 @@
 .DS_Store
-yolo/datasets/fingerspelling_data_2
-yolo/datasets/fingerspelling_bg
-yolo/datasets/fingerspelling_clean
-yolo/datasets/fingerspelling_main
+yolo/datasets
+yolo/runs
+yolo/yolov8n-cls.pt
+yolo/yolov8n.pt
