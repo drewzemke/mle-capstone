@@ -40,7 +40,7 @@ export function drawFps(ctx: CanvasRenderingContext2D, fps: number) {
 const TOP_N_SCORES = 5;
 
 // score threshold for predicting a label
-const SCORE_THRESHOLD = 0.6;
+const SCORE_THRESHOLD = 0.5;
 
 export function drawLetterProbs(ctx: CanvasRenderingContext2D, results: ClassificationResults) {
   ctx.font = "bold 12px monospace";
